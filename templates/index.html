@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>中英翻译和英文字典系统</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            font-weight: 300;
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .main-content {
+            padding: 40px;
+        }
+
+        .tabs {
+            display: flex;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .tab {
+            padding: 15px 30px;
+            cursor: pointer;
+            border: none;
+            background: none;
+            font-size: 1.1em;
+            color: #666;
+            transition: all 0.3s ease;
+            border-bottom: 3px solid transparent;
+        }
+
+        .tab.active {
+            color: #4facfe;
+            border-bottom-color: #4facfe;
+            font-weight: 600;
+        }
+
+        .tab:hover {
+            color: #4facfe;
+            background: #f8f9ff;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .input-group textarea {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 1em;
+            resize: vertical;
+            min-height: 100px;
+            transition: border-color 0.3s ease;
+        }
+
+        .input-group textarea:focus {
+            outline: none;
+            border-color: #4facfe;
+        }
+
+        .language-selector {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .language-option {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .language-option input[type="radio"] {
+            width: 18px;
+            height: 18px;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 10px;
+            font-size: 1.1em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-right: 10px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(79, 172, 254, 0.3);
+        }
+
+        .btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .result {
+            margin-top: 20px;
+            padding: 20px;
+            background: #f8f9ff;
+            border-radius: 10px;
+            border-left: 4px solid #4facfe;
+        }
+
+        .result h3 {
+            color: #333;
+            margin-bottom: 15px;
+        }
+
+        .translation-result {
+            font-size: 1.2em;
+            color: #2c3e50;
+            margin-bottom: 15px;
+            padding: 15px;
+            background: white;
+            border-radius: 8px;
+            border: 1px solid #e0e0e0;
+        }
+
+        .examples {
+            margin-top: 20px;
+        }
+
+        .example-item {
+            background: white;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 8px;
+            border-left: 3px solid #4facfe;
+        }
+
+        .example-word {
+            font-weight: 600;
+            color: #4facfe;
+            margin-bottom: 8px;
+        }
+
+        .example-sentence {
+            color: #555;
+            font-style: italic;
+        }
+
+        .word-definition {
+            background: white;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 8px;
+            border: 1px solid #e0e0e0;
+        }
+
+        .word-title {
+            font-size: 1.3em;
+            font-weight: 600;
+            color: #4facfe;
+            margin-bottom: 10px;
+        }
+
+        .pronunciation {
+            color: #666;
+            font-style: italic;
+            margin-bottom: 10px;
+        }
+
+        .definition-list {
+            margin-bottom: 10px;
+        }
+
+        .definition-item {
+            margin-bottom: 5px;
+            padding-left: 20px;
+            position: relative;
+        }
+
+        .definition-item::before {
+            content: "•";
+            color: #4facfe;
+            position: absolute;
+            left: 0;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+        }
+
+        .error {
+            background: #ffe6e6;
+            color: #d63031;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #d63031;
+            margin-top: 20px;
+        }
+
+        .dictionary-search {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .dictionary-search input {
+            flex: 1;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 1em;
+        }
+
+        .dictionary-search input:focus {
+            outline: none;
+            border-color: #4facfe;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                margin: 10px;
+                border-radius: 15px;
+            }
+            
+            .header {
+                padding: 20px;
+            }
+            
+            .header h1 {
+                font-size: 2em;
+            }
+            
+            .main-content {
+                padding: 20px;
+            }
+            
+            .tabs {
+                flex-wrap: wrap;
+            }
+            
+            .tab {
+                padding: 10px 20px;
+                font-size: 1em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🌐 中英翻译和英文字典系统</h1>
+            <p>基于开源翻译模型，支持中英互译和英文例句查询</p>
+        </div>
+
+        <div class="main-content">
+            <div class="tabs">
+                <button class="tab active" onclick="switchTab('translate')">翻译</button>
+                <button class="tab" onclick="switchTab('dictionary')">字典</button>
+                <button class="tab" onclick="switchTab('examples')">翻译+例句</button>
+            </div>
+
+            <!-- 翻译标签页 -->
+            <div id="translate" class="tab-content active">
+                <div class="input-group">
+                    <label for="translateText">输入要翻译的文本：</label>
+                    <textarea id="translateText" placeholder="请输入中文或英文文本..."></textarea>
+                </div>
+
+                <div class="language-selector">
+                    <div class="language-option">
+                        <input type="radio" id="zh-en" name="translateDirection" value="zh" checked>
+                        <label for="zh-en">中文 → 英文</label>
+                    </div>
+                    <div class="language-option">
+                        <input type="radio" id="en-zh" name="translateDirection" value="en">
+                        <label for="en-zh">英文 → 中文</label>
+                    </div>
+                </div>
+
+                <button class="btn" onclick="translateText()">翻译</button>
+                <div id="translateResult"></div>
+            </div>
+
+            <!-- 字典标签页 -->
+            <div id="dictionary" class="tab-content">
+                <div class="dictionary-search">
+                    <input type="text" id="dictionaryWord" placeholder="输入英文单词查询...">
+                    <button class="btn" onclick="searchDictionary()">查询</button>
+                </div>
+                <div id="dictionaryResult"></div>
+            </div>
+
+            <!-- 翻译+例句标签页 -->
+            <div id="examples" class="tab-content">
+                <div class="input-group">
+                    <label for="exampleText">输入要翻译的文本：</label>
+                    <textarea id="exampleText" placeholder="请输入中文或英文文本，系统将自动检测语言并提供例句..."></textarea>
+                </div>
+
+                <button class="btn" onclick="translateWithExamples()">翻译并显示例句</button>
+                <div id="exampleResult"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function switchTab(tabName) {
+            // 隐藏所有标签页内容
+            const contents = document.querySelectorAll('.tab-content');
+            contents.forEach(content => content.classList.remove('active'));
+            
+            // 移除所有标签的active类
+            const tabs = document.querySelectorAll('.tab');
+            tabs.forEach(tab => tab.classList.remove('active'));
+            
+            // 显示选中的标签页
+            document.getElementById(tabName).classList.add('active');
+            event.target.classList.add('active');
+        }
+
+        async function translateText() {
+            const text = document.getElementById('translateText').value.trim();
+            if (!text) {
+                showError('translateResult', '请输入要翻译的文本');
+                return;
+            }
+
+            const direction = document.querySelector('input[name="translateDirection"]:checked').value;
+            
+            showLoading('translateResult');
+            
+            try {
+                const response = await fetch('/api/translate', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        text: text,
+                        source_lang: direction
+                    })
+                });
+
+                const data = await response.json();
+                
+                if (data.success) {
+                    showTranslationResult('translateResult', data);
+                } else {
+                    showError('translateResult', data.error);
+                }
+            } catch (error) {
+                showError('translateResult', '网络错误: ' + error.message);
+            }
+        }
+
+        async function searchDictionary() {
+            const word = document.getElementById('dictionaryWord').value.trim();
+            if (!word) {
+                showError('dictionaryResult', '请输入要查询的单词');
+                return;
+            }
+
+            showLoading('dictionaryResult');
+            
+            try {
+                const response = await fetch(`/api/dictionary/${encodeURIComponent(word)}`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    showDictionaryResult('dictionaryResult', data);
+                } else {
+                    showError('dictionaryResult', data.error);
+                }
+            } catch (error) {
+                showError('dictionaryResult', '网络错误: ' + error.message);
+            }
+        }
+
+        async function translateWithExamples() {
+            const text = document.getElementById('exampleText').value.trim();
+            if (!text) {
+                showError('exampleResult', '请输入要翻译的文本');
+                return;
+            }
+
+            showLoading('exampleResult');
+            
+            try {
+                const response = await fetch('/api/translate_with_examples', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        text: text,
+                        source_lang: 'auto'
+                    })
+                });
+
+                const data = await response.json();
+                
+                if (data.success) {
+                    showExampleResult('exampleResult', data);
+                } else {
+                    showError('exampleResult', data.error);
+                }
+            } catch (error) {
+                showError('exampleResult', '网络错误: ' + error.message);
+            }
+        }
+
+        function showLoading(elementId) {
+            document.getElementById(elementId).innerHTML = '<div class="loading">正在处理，请稍候...</div>';
+        }
+
+        function showError(elementId, message) {
+            document.getElementById(elementId).innerHTML = `<div class="error">${message}</div>`;
+        }
+
+        function showTranslationResult(elementId, data) {
+            const resultDiv = document.getElementById(elementId);
+            resultDiv.innerHTML = `
+                <div class="result">
+                    <h3>翻译结果</h3>
+                    <div class="translation-result">${data.translation}</div>
+                </div>
+            `;
+        }
+
+        function showDictionaryResult(elementId, data) {
+            const resultDiv = document.getElementById(elementId);
+            
+            let definitionsHtml = '';
+            if (data.definitions && data.definitions.length > 0) {
+                definitionsHtml = '<div class="definition-list">';
+                data.definitions.forEach(def => {
+                    definitionsHtml += `<div class="definition-item">${def}</div>`;
+                });
+                definitionsHtml += '</div>';
+            }
+
+            let examplesHtml = '';
+            if (data.examples && data.examples.length > 0) {
+                examplesHtml = '<h4>例句：</h4>';
+                data.examples.forEach(example => {
+                    examplesHtml += `<div class="example-sentence">• ${example}</div>`;
+                });
+            }
+
+            resultDiv.innerHTML = `
+                <div class="result">
+                    <div class="word-definition">
+                        <div class="word-title">${data.word}</div>
+                        <div class="pronunciation">发音: ${data.pronunciation || 'N/A'}</div>
+                        <div>中文: ${data.chinese || 'N/A'}</div>
+                        ${definitionsHtml}
+                        ${examplesHtml}
+                    </div>
+                </div>
+            `;
+        }
+
+        function showExampleResult(elementId, data) {
+            const resultDiv = document.getElementById(elementId);
+            
+            let examplesHtml = '';
+            if (data.examples && Object.keys(data.examples).length > 0) {
+                examplesHtml = '<div class="examples"><h3>相关例句</h3>';
+                for (const [word, examples] of Object.entries(data.examples)) {
+                    examplesHtml += `<div class="example-item">
+                        <div class="example-word">${word}</div>`;
+                    examples.slice(0, 2).forEach(example => {
+                        examplesHtml += `<div class="example-sentence">${example}</div>`;
+                    });
+                    examplesHtml += '</div>';
+                }
+                examplesHtml += '</div>';
+            }
+
+            let definitionsHtml = '';
+            if (data.word_definitions && Object.keys(data.word_definitions).length > 0) {
+                definitionsHtml = '<div class="examples"><h3>单词释义</h3>';
+                for (const [word, info] of Object.entries(data.word_definitions)) {
+                    definitionsHtml += `<div class="word-definition">
+                        <div class="word-title">${word}</div>
+                        <div class="pronunciation">发音: ${info.pronunciation || 'N/A'}</div>
+                        <div>中文: ${info.chinese || 'N/A'}</div>
+                    </div>`;
+                }
+                definitionsHtml += '</div>';
+            }
+
+            resultDiv.innerHTML = `
+                <div class="result">
+                    <h3>翻译结果</h3>
+                    <div class="translation-result">${data.translation}</div>
+                    ${examplesHtml}
+                    ${definitionsHtml}
+                </div>
+            `;
+        }
+
+        // 回车键支持
+        document.getElementById('dictionaryWord').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                searchDictionary();
+            }
+        });
+
+        document.getElementById('translateText').addEventListener('keypress', function(e) {
+            if (e.ctrlKey && e.key === 'Enter') {
+                translateText();
+            }
+        });
+
+        document.getElementById('exampleText').addEventListener('keypress', function(e) {
+            if (e.ctrlKey && e.key === 'Enter') {
+                translateWithExamples();
+            }
+        });
+    </script>
+</body>
+</html>
